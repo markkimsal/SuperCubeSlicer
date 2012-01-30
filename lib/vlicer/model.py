@@ -15,7 +15,9 @@ class Model2d:
 		k = this.layers.keys()
 		k.sort()
 		return k[layidx]
-		print k
+
+	def get_max_z(this):
+		return len(this.layers)-1
 
 class Layer:
 
@@ -49,7 +51,7 @@ def parse_stl(filename, lh):
 			#print facet_count
 			#print facet.lines['C'].a().Z
 			l = facet.intersect_line( this_lh )
-			print facet
+			#print facet
 			if l is not None:
 				lay.lines.append( l )
 

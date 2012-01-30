@@ -1,1 +1,1 @@
-__all__ = ["geom", "model"]
+__all__ = ["geom", "model", "gui", "settings", "workspace"]

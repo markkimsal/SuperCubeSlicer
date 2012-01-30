@@ -1,13 +1,90 @@
-import os, sys
-try :
-	sys.path.append ( os.path.join( sys.path[0], 'lib')  )
-except Exception as e:
-	print "can't locate library path lib"
-
 import pygame
 from pygame.locals import *
 import vlicer.model
 import vlicer.geom
+import wx
+
+class PygameDisplay(wx.Panel):
+    """wx Window subclass that draws a pygame surface onto a wx Device Context"""
+
+    def __init__(self, parent, ID):
+        wx.Panel.__init__(self, parent, ID)
+        self.parent = parent
+        self.hwnd = self.GetHandle()
+        #pygame.display.init()
+       
+        self.SetClientRect( wx.Rect(20, 100, 20, 20) )
+        print self.GetClientRect()
+        print self.GetClientRect().GetTop()
+        self.size = self.GetSizeTuple()
+        self.size_dirty = True
+       
+        self.timer = wx.Timer(self)
+        self.Bind(wx.EVT_PAINT, self.OnPaint)
+        self.Bind(wx.EVT_TIMER, self.Update, self.timer)
+        self.Bind(wx.EVT_SIZE, self.OnSize)
+       
+        self.fps = 18.0
+        self.timespacing = 1000.0 / self.fps
+        self.timer.Start(self.timespacing, False)
+
+        self.world = Viz_World(2)
+
+
+    def UpdateLayer(self, idx):
+        self.world.layer_set(idx);
+        self.Redraw()
+        pass
+
+
+    def Update(self, event):
+        # Any update tasks would go here (moving sprites, advancing animation frames etc.)
+        #self.Redraw()
+        #self.SetClientRect( wx.Rect(20, 100, 596, 179) )
+        #print self.GetClientRect()
+        #print self.GetClientRect().GetTop()
+        pass
+
+    def Redraw(self):
+#        if self.size_dirty == False:
+#            return
+        if self.size_dirty:
+            self.screen = pygame.Surface(self.size, 0, 32)
+            self.size_dirty = False
+
+        self.screen.fill((0,0,0))
+        self.screen.blit( self.world.platform.image , (0, 0))
+ 
+        cur = 0
+ 
+        s = pygame.image.tostring(self.screen, 'RGB')  # Convert the surface to an RGB string
+        img = wx.ImageFromData(self.size[0], self.size[1], s)  # Load this string into a wx image
+        bmp = wx.BitmapFromImage(img)  # Get the image in bitmap form
+        #dc = wx.PaintDC(self)
+        dc = wx.BufferedPaintDC(self)
+        #dc.SetBackground(wx.Brush('white'))
+        #dc.Clear()
+        #dc = wx.ClientDC(self)  # Device context for drawing the bitmap
+        #dc = wx.PaintDC(self)  # Device context for drawing the bitmap
+        dc.DrawBitmap(bmp, 0, 0, False)  # Blit the bitmap image to the display
+        del dc
+ 
+    def OnPaint(self, event):
+        self.Redraw()
+        event.Skip()  # Make sure the parent frame gets told to redraw as well
+
+    def OnSize(self, event):
+        self.size = self.GetSizeTuple()
+        self.size_dirty = True
+
+    def Kill(self, event):
+        # Make sure Pygame can't be asked to redraw /before/ quitting by unbinding all methods which
+        # call the Redraw() method
+        # (Otherwise wx seems to call Draw between quitting Pygame and destroying the frame)
+        # This may or may not be necessary now that Pygame is just drawing to surfaces
+        self.Unbind(event = wx.EVT_PAINT, handler = self.OnPaint)
+        self.Unbind(event = wx.EVT_TIMER, handler = self.Update, source = self.timer)
+
 
 
 class VZ_sprite:
@@ -51,12 +128,12 @@ class VZ_sprite_platform(VZ_sprite):
 	h_velocity = 0
 	v_velocity = 0
 
-	def __init__(this, size, zoom=2):
+	def __init__(this, size, color, zoom=2):
 		this.x_pos = 0
 		this.y_pos = 0
 		this.size_x = size[0]
 		this.size_y = size[1]
-		this.color = pygame.Color( 250, 240, 200, 255 )
+		this.color = color
 		this.set_zoom(zoom)
 
 	def set_zoom(this, zoom):
@@ -87,10 +164,25 @@ class VZ_sprite_platform(VZ_sprite):
 class Viz_World:
 	def __init__(this, zoom=1):
 		this.zoom=zoom
-		this.platform = VZ_sprite_platform( (210, 210) )
+		this.platform = VZ_sprite_platform( (210, 210) ,  pygame.Color( 250, 240, 200, 255 ))
 		this.pen_color = pygame.Color( 50, 40, 10, 255 )
+		this.grid_color = pygame.Color( 230, 220, 180, 255 )
 		this.viz_layer = 1
 		this.model = None
+		this.erasePlatform()
+
+	def erasePlatform(this):
+		this.platform.erase()
+		sx = this.platform.size_x * this.zoom
+		sy = this.platform.size_y * this.zoom
+		for h in range(10, sx, 10):
+			h = h*this.zoom
+			pygame.draw.line(this.platform.image, this.grid_color, (h, 0), (h, sy), 1)
+
+		for w in range(10, sy, 10):
+			w = w*this.zoom
+			pygame.draw.line(this.platform.image, this.grid_color, (0, w), (sx, w), 1)
+
 
 	def layer_up(this):
 		this.viz_layer += 1
@@ -99,7 +191,7 @@ class Viz_World:
 			#print "Layer is ", this.model.get_layer_z(this.viz_layer)
 			return;
 		#print "Layer is ", this.model.get_layer_z(this.viz_layer)
-		this.platform.erase()
+		this.erasePlatform()
 		this.paint_model(this.platform.image, this.model)
 
 	def layer_down(this):
@@ -109,7 +201,7 @@ class Viz_World:
 			#print "Layer is ", this.model.get_layer_z(this.viz_layer)
 			return;
 		#print "Layer is ", this.model.get_layer_z(this.viz_layer)
-		this.platform.erase()
+		this.erasePlatform()
 		this.paint_model(this.platform.image, this.model)
 
 	def layer_set(this, idx):
@@ -118,7 +210,7 @@ class Viz_World:
 			return;
 		this.viz_layer = idx
 		print "Layer is ", this.model.get_layer_z(this.viz_layer)
-		this.platform.erase()
+		this.erasePlatform()
 		this.paint_model(this.platform.image, this.model)
 
 	def paint_platform(this, g):
@@ -137,15 +229,20 @@ class Viz_World:
 			return
 		lay = model.layers[layid]
 		for line in lay.lines:
-			ax = (line.a().X *this.zoom) + this.platform.size_x/2
-			bx = (line.b().X *this.zoom)+ this.platform.size_x/2
-			ay = (line.a().Y *this.zoom)+ this.platform.size_y/2
-			by = (line.b().Y *this.zoom)+ this.platform.size_y/2
+			ax = (line.a().X *this.zoom) + this.platform.size_x
+			bx = (line.b().X *this.zoom)+ this.platform.size_x
+			ay = (line.a().Y *this.zoom)+ this.platform.size_y
+			by = (line.b().Y *this.zoom)+ this.platform.size_y
 			#print line.a().X, ax, line.b().X, bx
 			pygame.draw.line(g, this.pen_color, (ax, ay), (bx, by), 1)
 
 	def get_updates(this):
 		updates = pygame.Rect( (this.platform.x_pos, this.platform.y_pos, this.platform.size_x, this.platform.size_y) )
+
+	def get_max_z(this):
+		if this.model == None:
+			return 0
+		return this.model.get_max_z()
 
 
 if __name__ == '__main__':
@@ -157,7 +254,7 @@ if __name__ == '__main__':
 	model = vlicer.model.parse_stl('/'.join(df), 0.25)
 
 	world.set_model(model)
-	
+
 
 	while ( 1 ):
 		updates = world.get_updates()
