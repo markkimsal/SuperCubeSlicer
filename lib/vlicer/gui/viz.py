@@ -28,7 +28,7 @@ class PygameDisplay(wx.Panel):
         self.timespacing = 1000.0 / self.fps
         self.timer.Start(self.timespacing, False)
 
-        self.world = Viz_World(2)
+        self.world = Viz_World(6)
 
 
     def UpdateLayer(self, idx):
@@ -167,6 +167,10 @@ class Viz_World:
 		this.platform = VZ_sprite_platform( (210, 210) ,  pygame.Color( 250, 240, 200, 255 ))
 		this.pen_color = pygame.Color( 50, 40, 10, 255 )
 		this.grid_color = pygame.Color( 230, 220, 180, 255 )
+
+		this.a_color = pygame.Color( 200, 100, 100 , 100)
+		this.b_color = pygame.Color( 100, 100, 200 , 100)
+
 		this.viz_layer = 1
 		this.model = None
 		this.erasePlatform()
@@ -229,12 +233,15 @@ class Viz_World:
 			return
 		lay = model.layers[layid]
 		for line in lay.lines:
-			ax = (line.a().X *this.zoom) + this.platform.size_x
-			bx = (line.b().X *this.zoom)+ this.platform.size_x
-			ay = (line.a().Y *this.zoom)+ this.platform.size_y
-			by = (line.b().Y *this.zoom)+ this.platform.size_y
+			ax = int((line.a().X *this.zoom) + this.platform.size_x)
+			bx = int((line.b().X *this.zoom)+ this.platform.size_x)
+			ay = int((line.a().Y *this.zoom)+ this.platform.size_y)
+			by = int((line.b().Y *this.zoom)+ this.platform.size_y)
 			#print line.a().X, ax, line.b().X, bx
 			pygame.draw.line(g, this.pen_color, (ax, ay), (bx, by), 1)
+			pygame.draw.circle(g, this.a_color, (ax, ay), 4)
+			pygame.draw.circle(g, this.b_color, (bx, by), 4)
+
 
 	def get_updates(this):
 		updates = pygame.Rect( (this.platform.x_pos, this.platform.y_pos, this.platform.size_x, this.platform.size_y) )

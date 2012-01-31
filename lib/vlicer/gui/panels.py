@@ -2,6 +2,7 @@ import wx
 import vlicer.gui.viz
 import vlicer.workspace
 import vlicer.model
+import vlicer.slicer
 
 class WorkspacePanel(wx.Panel):
 	def __init__(this, parent, id):
@@ -88,7 +89,17 @@ class WorkspacePanel(wx.Panel):
 	def OnActivate(this, event):
 		itm = event.GetItem()
 		df = ('ut', 'data', 'hollow_pyramid.stl')
-		model = vlicer.model.parse_stl('/'.join(df), 0.10)
+		#df = ('ut', 'data', 'cube.stl')
+		#model = vlicer.model.parse_stl('/'.join(df), 0.10)
+
+		#df = ('ut', 'data', 'cube.stl')
+		import os
+		pipe = vlicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
+		model = pipe.newModel()
+		pipe.appendPlugin('vlicer.plugins.parse_stl')
+		pipe.appendPlugin('vlicer.plugins.combine_straight_lines')
+		pipe.runPipeline()
+
 		this.viz.display.world.set_model(model)
 		this.viz.slider.SetMax( this.viz.display.world.get_max_z() )
 		this.viz.slider.SetMin( 1 )

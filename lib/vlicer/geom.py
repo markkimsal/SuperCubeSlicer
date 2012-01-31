@@ -98,6 +98,7 @@ class Facet():
 			if ((a.Z < (z - smudge) and b.Z > (z + smudge)) or (b.Z < (z - smudge) and a.Z > (z + smudge))):
 				p = Point( b.X + (a.X - b.X) * (z - b.Z) / (a.Z - b.Z),  b.Y + (a.Y - b.Y) * (z - b.Z) / (a.Z - b.Z), z)
 				points.append( p ) 
+				print p.X, p.Y, p.Z
 				#print 'plane ', z, ' intersects ', f, ' between ', a.Z, ' ',  b.Z
 			else:
 				pass

@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, math
 try :
 	sys.path.append ( os.path.join( sys.path[0], 'lib')  )
 except Exception as e:
@@ -8,6 +8,8 @@ import pygame
 from pygame.locals import *
 import vlicer.model
 import vlicer.geom
+import vlicer.gui.viz
+import vlicer.slicer
 
 
 class VZ_sprite:
@@ -89,6 +91,7 @@ class Viz_World:
 		this.zoom=zoom
 		this.platform = VZ_sprite_platform( (210, 210) )
 		this.pen_color = pygame.Color( 50, 40, 10, 255 )
+		this.pen_color_first = pygame.Color( 125, 75, 75, 255 )
 		this.viz_layer = 1
 		this.model = None
 
@@ -131,18 +134,34 @@ class Viz_World:
 	def paint_model(this, g, model):
 		laykeys = model.layers.keys()
 		laykeys.sort()
+		idx=0
+		acolor = pygame.Color( 200, 100, 100 , 100)
+		bcolor = pygame.Color( 100, 100, 200 , 100)
 		try:
 			layid = laykeys[this.viz_layer]
 		except IndexError:
 			return
 		lay = model.layers[layid]
+		totallines  = len(lay.lines) * 1.0
 		for line in lay.lines:
-			ax = (line.a().X *this.zoom) + this.platform.size_x/2
-			bx = (line.b().X *this.zoom)+ this.platform.size_x/2
-			ay = (line.a().Y *this.zoom)+ this.platform.size_y/2
-			by = (line.b().Y *this.zoom)+ this.platform.size_y/2
+			if idx == 0:
+				pc = this.pen_color_first
+				w = 4
+			else:
+				#pc = pygame.Color( int(200/math.ceil(idx/12.0)), int(200/math.ceil(idx/12.0)), int(200/math.ceil(idx/12.0)), 255 )
+				pc = pygame.Color( abs(int(200 * (idx/totallines))), abs(int(200 * (idx/totallines))), abs(int(200 *(idx/totallines))), 255 )
+				#pc = this.pen_color
+				w = 2
+			ax = int((line.a().X *this.zoom) + this.platform.size_x/2)
+			bx = int((line.b().X *this.zoom)+ this.platform.size_x/2)
+			ay = int((line.a().Y *this.zoom)+ this.platform.size_y/2)
+			by = int((line.b().Y *this.zoom)+ this.platform.size_y/2)
 			#print line.a().X, ax, line.b().X, bx
-			pygame.draw.line(g, this.pen_color, (ax, ay), (bx, by), 1)
+			pygame.draw.line(g, pc, (ax, ay), (bx, by), w)
+			pygame.draw.circle(g, acolor, (ax, ay), 4)
+			pygame.draw.circle(g, bcolor, (bx, by), 4)
+			idx=idx+1
+
 
 	def get_updates(this):
 		updates = pygame.Rect( (this.platform.x_pos, this.platform.y_pos, this.platform.size_x, this.platform.size_y) )
@@ -152,12 +171,16 @@ if __name__ == '__main__':
 	pygame.display.init()
 	window = pygame.display.set_mode( (512,448) )
 	pygame.display.set_caption('Super Cube Slice (Alpha)')
-	world = Viz_World(2)
-	df = ('ut', 'data', 'cube.stl')
-	model = vlicer.model.parse_stl('/'.join(df), 0.25)
+	world = vlicer.gui.viz.Viz_World(4)
+	#df = ('ut', 'data', 'cube.stl')
+	df = ('ut', 'data', 'hollow_pyramid.stl')
+	pipe = vlicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
+	model = pipe.newModel()
+	pipe.appendPlugin('vlicer.plugins.parse_stl')
+	pipe.appendPlugin('vlicer.plugins.combine_straight_lines')
+	pipe.runPipeline()
 
 	world.set_model(model)
-	
 
 	while ( 1 ):
 		updates = world.get_updates()
