@@ -1,4 +1,4 @@
-import vlicer.model
+import cubeslicer.model
 
 class Pipeline(object):
 
@@ -14,7 +14,7 @@ class Pipeline(object):
 			this.setLayerHeight(lh)
 		else:
 			lh = this.getSetting('layerheight')
-		this.model = vlicer.model.Model2d(lh)
+		this.model = cubeslicer.model.Model2d(lh)
 		return this.model
 
 	def setFilename(this, fn):
@@ -28,7 +28,7 @@ class Pipeline(object):
 
 	def appendPlugin(this, plugName):
 		#plugin =  __import__(plugName)
-		plugin =  __import__(plugName, fromlist=['vlicer.plugins'])
+		plugin =  __import__(plugName, fromlist=['cubeslicer.plugins'])
 		print plugin, plugName
 		this.plugins.append(plugin)
 

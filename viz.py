@@ -6,10 +6,10 @@ except Exception as e:
 
 import pygame
 from pygame.locals import *
-import vlicer.model
-import vlicer.geom
-import vlicer.gui.viz
-import vlicer.slicer
+import cubeslicer.model
+import cubeslicer.geom
+import cubeslicer.gui.viz
+import cubeslicer.slicer
 
 
 class VZ_sprite:
@@ -171,13 +171,13 @@ if __name__ == '__main__':
 	pygame.display.init()
 	window = pygame.display.set_mode( (512,448) )
 	pygame.display.set_caption('Super Cube Slice (Alpha)')
-	world = vlicer.gui.viz.Viz_World(4)
+	world = cubeslicer.gui.viz.Viz_World(4)
 	#df = ('ut', 'data', 'cube.stl')
 	df = ('ut', 'data', 'hollow_pyramid.stl')
-	pipe = vlicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
+	pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
 	model = pipe.newModel()
-	pipe.appendPlugin('vlicer.plugins.parse_stl')
-	pipe.appendPlugin('vlicer.plugins.combine_straight_lines')
+	pipe.appendPlugin('cubeslicer.plugins.parse_stl')
+	pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
 	pipe.runPipeline()
 
 	world.set_model(model)

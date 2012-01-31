@@ -1,5 +1,5 @@
 import os
-import vlicer.settings
+import cubeslicer.settings
 
 class WorkspaceModel(object):
 
@@ -7,12 +7,12 @@ class WorkspaceModel(object):
 		this.projList = []
 
 	def projects(this):
-		db = vlicer.settings.DbDriver()
+		db = cubeslicer.settings.DbDriver()
 		db._query("SELECT * FROM projects")
 		while db.next():
 			this.projList.append(db.rec)
 			print db.rec
 
-		#this.dbfile = vlicer.settings.get_db_file()
+		#this.dbfile = cubeslicer.settings.get_db_file()
 		return this.projList
 

@@ -1,4 +1,4 @@
-import vlicer.geom
+import cubeslicer.geom
 
 class Model2d:
 

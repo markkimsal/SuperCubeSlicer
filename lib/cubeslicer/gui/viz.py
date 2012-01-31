@@ -1,7 +1,7 @@
 import pygame
 from pygame.locals import *
-import vlicer.model
-import vlicer.geom
+import cubeslicer.model
+import cubeslicer.geom
 import wx
 
 class PygameDisplay(wx.Panel):
@@ -258,7 +258,7 @@ if __name__ == '__main__':
 	pygame.display.set_caption('Super Cube Slice (Alpha)')
 	world = Viz_World(2)
 	df = ('ut', 'data', 'cube.stl')
-	model = vlicer.model.parse_stl('/'.join(df), 0.25)
+	model = cubeslicer.model.parse_stl('/'.join(df), 0.25)
 
 	world.set_model(model)
 

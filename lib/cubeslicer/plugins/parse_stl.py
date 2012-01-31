@@ -1,7 +1,7 @@
 import sys
-import vlicer.model
-import vlicer.geom
-from vlicer.model import Model2d
+import cubeslicer.model
+import cubeslicer.geom
+from cubeslicer.model import Model2d
 
 def process(model, pipeline):
 	filename   = pipeline.getSetting('filename')
@@ -61,7 +61,7 @@ def stl_read_facet_ascii(fh):
 			if (line.find('vertex ') != -1):
 				parts = line.split(' ')
 				#print float(parts[-3]), float(parts[-2]), float(parts[-1])
-				verts.append( vlicer.geom.Point( float(parts[-3]), float(parts[-2]), float(parts[-1])) ) 
+				verts.append( cubeslicer.geom.Point( float(parts[-3]), float(parts[-2]), float(parts[-1])) ) 
 			else :
 				line = fh.readline().strip()
 				continue
@@ -77,7 +77,7 @@ def stl_read_facet_ascii(fh):
 		line = fh.readline().strip()
 
 	if (len(verts) == 3):
-		face = vlicer.geom.Facet( verts )
+		face = cubeslicer.geom.Facet( verts )
 		#print face
 		return face
 	else:

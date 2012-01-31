@@ -1,7 +1,7 @@
 import sys
-import vlicer.model
-import vlicer.geom
-from vlicer.model import Model2d
+import cubeslicer.model
+import cubeslicer.geom
+from cubeslicer.model import Model2d
 
 def process(model, pipeline):
 

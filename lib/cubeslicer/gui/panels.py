@@ -1,8 +1,8 @@
 import wx
-import vlicer.gui.viz
-import vlicer.workspace
-import vlicer.model
-import vlicer.slicer
+import cubeslicer.gui.viz
+import cubeslicer.workspace
+import cubeslicer.model
+import cubeslicer.slicer
 
 class WorkspacePanel(wx.Panel):
 	def __init__(this, parent, id):
@@ -73,7 +73,7 @@ class WorkspacePanel(wx.Panel):
 		return tree
 
 	def _populateTree(this):
-		model = vlicer.workspace.WorkspaceModel()
+		model = cubeslicer.workspace.WorkspaceModel()
 		proj  = model.projects()
 		itm = this.tree.AppendItem(this.root, "Hollow Pyramid")
 
@@ -90,14 +90,14 @@ class WorkspacePanel(wx.Panel):
 		itm = event.GetItem()
 		df = ('ut', 'data', 'hollow_pyramid.stl')
 		#df = ('ut', 'data', 'cube.stl')
-		#model = vlicer.model.parse_stl('/'.join(df), 0.10)
+		#model = cubeslicer.model.parse_stl('/'.join(df), 0.10)
 
 		#df = ('ut', 'data', 'cube.stl')
 		import os
-		pipe = vlicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
+		pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
 		model = pipe.newModel()
-		pipe.appendPlugin('vlicer.plugins.parse_stl')
-		pipe.appendPlugin('vlicer.plugins.combine_straight_lines')
+		pipe.appendPlugin('cubeslicer.plugins.parse_stl')
+		pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
 		pipe.runPipeline()
 
 		this.viz.display.world.set_model(model)
@@ -111,7 +111,7 @@ class VizPanel(wx.Panel):
 	def __init__(this, parent, id):
 		wx.Panel.__init__(this, parent, id,  style= wx.SIMPLE_BORDER)
 
-		this.display = vlicer.gui.viz.PygameDisplay(this, -1)
+		this.display = cubeslicer.gui.viz.PygameDisplay(this, -1)
 
 		max_z = this.display.world.get_max_z()
 		this.slider = wx.Slider(this, wx.ID_ANY, 5, 1, max_z, style = wx.SL_HORIZONTAL | wx.SL_LABELS)
