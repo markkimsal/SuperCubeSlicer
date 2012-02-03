@@ -14,8 +14,8 @@ class PygameDisplay(wx.Panel):
         #pygame.display.init()
        
         self.SetClientRect( wx.Rect(20, 100, 20, 20) )
-        print self.GetClientRect()
-        print self.GetClientRect().GetTop()
+        #print self.GetClientRect()
+        #print self.GetClientRect().GetTop()
         self.size = self.GetSizeTuple()
         self.size_dirty = True
        
@@ -165,11 +165,18 @@ class Viz_World:
 	def __init__(this, zoom=1):
 		this.zoom=zoom
 		this.platform = VZ_sprite_platform( (210, 210) ,  pygame.Color( 250, 240, 200, 255 ))
+		this.platform.x_pos = int((512- 420) /2 )
+		this.platform.y_pos = int((448- 420) /2)
+
+		#this.platform.x_pos = 44
+		#this.platform.y_pos = 12
+
 		this.pen_color = pygame.Color( 50, 40, 10, 255 )
+		this.ply_color = pygame.Color( 150, 70, 70, 255 )
 		this.grid_color = pygame.Color( 230, 220, 180, 255 )
 
-		this.a_color = pygame.Color( 200, 100, 100 , 100)
-		this.b_color = pygame.Color( 100, 100, 200 , 100)
+		this.b_color = pygame.Color( 200, 100, 100 , 100)
+		this.a_color = pygame.Color( 100, 100, 200 , 100)
 
 		this.viz_layer = 1
 		this.model = None
@@ -231,16 +238,49 @@ class Viz_World:
 			layid = laykeys[this.viz_layer]
 		except IndexError:
 			return
+		print layid
 		lay = model.layers[layid]
 		for line in lay.lines:
 			ax = int((line.a().X *this.zoom) + this.platform.size_x)
 			bx = int((line.b().X *this.zoom)+ this.platform.size_x)
 			ay = int((line.a().Y *this.zoom)+ this.platform.size_y)
 			by = int((line.b().Y *this.zoom)+ this.platform.size_y)
-			#print line.a().X, ax, line.b().X, bx
-			pygame.draw.line(g, this.pen_color, (ax, ay), (bx, by), 1)
-			pygame.draw.circle(g, this.a_color, (ax, ay), 4)
+			#print str(line.a()), str(line.b())
+
+			pygame.draw.circle(g, this.a_color, (ax, ay), 6)
 			pygame.draw.circle(g, this.b_color, (bx, by), 4)
+
+			if not isinstance(line, cubeslicer.geom.PolyLine):
+				pygame.draw.line(g, this.pen_color, (ax, ay), (bx, by), 3)
+			else:
+				oldpoint = None
+				#for pntidx, pnt in line.points.iteritems():
+				for pnt in line.points:
+					#print pnt.X, pnt.Y
+					if oldpoint is not None:
+						ax = int((pnt.X *this.zoom) + this.platform.size_x)
+						bx = int((oldpoint.X *this.zoom)+ this.platform.size_x)
+						ay = int((pnt.Y *this.zoom)+ this.platform.size_y)
+						by = int((oldpoint.Y *this.zoom)+ this.platform.size_y)
+
+						pygame.draw.line(g, this.ply_color, (ax, ay), (bx, by), 2)
+
+					oldpoint = pnt
+
+					#if pntidx != 'A' and pntidx != 'B':
+					pygame.draw.circle(g, this.pen_color, (int(pnt.X * this.zoom + this.platform.size_x), int(pnt.Y * this.zoom + this.platform.size_x)), 4)
+
+				#after for loop, print last line between last point and first
+				"""
+				if oldpoint is not None:
+					ax = int((line.a().X *this.zoom) + this.platform.size_x)
+					bx = int((oldpoint.X *this.zoom)+ this.platform.size_x)
+					ay = int((line.a().Y *this.zoom)+ this.platform.size_y)
+					by = int((oldpoint.Y *this.zoom)+ this.platform.size_y)
+					pygame.draw.line(g, this.pen_color, (ax, ay), (bx, by), 1)
+				"""
+
+
 
 
 	def get_updates(this):

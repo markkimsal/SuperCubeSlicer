@@ -29,7 +29,7 @@ class Pipeline(object):
 	def appendPlugin(this, plugName):
 		#plugin =  __import__(plugName)
 		plugin =  __import__(plugName, fromlist=['cubeslicer.plugins'])
-		print plugin, plugName
+		#print plugin, plugName
 		this.plugins.append(plugin)
 
 	def resetPipleline(this, resetModel=False):
@@ -41,7 +41,7 @@ class Pipeline(object):
 			steps = len(this.plugins) - cur
 
 		for x in range(cur, cur+steps):
-			print x, (this.plugins[this.currentStep])
+			#print x, (this.plugins[this.currentStep])
 			this.plugins[this.currentStep].process(this.model, this)
 			this.currentStep = this.currentStep+1
 
@@ -51,7 +51,7 @@ class Pipeline(object):
 			steps = len(this.plugins) - cur
 
 		for x in range(cur, cur+steps):
-			print(this.plugins[this.currentStep])
+			#print(this.plugins[this.currentStep])
 			this.plugins[this.currentStep].process(this.model, this)
 			this.currentStep+1
 

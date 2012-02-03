@@ -31,3 +31,62 @@ class Test_Geometry(unittest.TestCase):
 
 		l = face.intersect_line( 2 )
 		self.assertEqual( 8, l.length() )
+
+
+	def test_polyline(self):
+		p1      = cubeslicer.geom.Point( 1, 1 )
+		p2      = cubeslicer.geom.Point( 3, 3)
+		line1   = cubeslicer.geom.Line( (p1, p2) )
+
+		p3      = cubeslicer.geom.Point( 3, 3 )
+		p4      = cubeslicer.geom.Point( 5, 5)
+		line2   = cubeslicer.geom.Line( (p3, p4) )
+
+		p5      = cubeslicer.geom.Point( 5, 5 )
+		p6      = cubeslicer.geom.Point( 10, 5)
+		line3   = cubeslicer.geom.Line( (p5, p6) )
+
+		polyline = cubeslicer.geom.PolyLine(line1, line2)
+		self.assertEqual( 3, len(polyline.points) )
+
+		polyline2 = cubeslicer.geom.PolyLine(polyline, line3)
+		self.assertEqual( 4, len(polyline2.points) )
+
+	def test_irregular_polyline(self):
+		p1      = cubeslicer.geom.Point( 1, 1 )
+		p2      = cubeslicer.geom.Point( 3, 3)
+		line1   = cubeslicer.geom.Line( (p1, p2) )
+
+		p3      = cubeslicer.geom.Point( 5, 5 )
+		p4      = cubeslicer.geom.Point( 3, 3)
+		line2   = cubeslicer.geom.Line( (p3, p4) )
+
+		p5      = cubeslicer.geom.Point( 10, 5 )
+		p6      = cubeslicer.geom.Point( 1, 1)
+		line3   = cubeslicer.geom.Line( (p5, p6) )
+
+		polyline = cubeslicer.geom.PolyLine(line2, line1)
+		self.assertEqual( 3, len(polyline.points) )
+		
+		self.assertEqual(  5, polyline.b().X )
+		self.assertEqual(  5, polyline.b().Y )
+
+		self.assertEqual(  1, polyline.a().X )
+		self.assertEqual(  1, polyline.a().Y )
+
+
+		polyline2 = cubeslicer.geom.PolyLine(polyline, line3)
+		for pnt in polyline2.points:
+			print pnt.X, pnt.Y
+	
+		self.assertEqual( 4, len(polyline2.points) )
+
+		#self.assertEqual( 10, polyline2.points['B'].X )
+		#self.assertEqual(  5, polyline2.points['B'].Y )
+
+		#self.assertEqual(  1, polyline2.points['A'].X )
+		#self.assertEqual(  1, polyline2.points['A'].Y )
+
+		#for idx, pnt in polyline2.points.iteritems():
+		#	print idx, pnt.X, pnt.Y
+	

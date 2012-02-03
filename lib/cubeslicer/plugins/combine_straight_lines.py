@@ -5,6 +5,7 @@ from cubeslicer.model import Model2d
 
 def process(model, pipeline):
 
+	smudge = 0.001
 	reducedLines = 0
 	firstLoop = True
 	while reducedLines or firstLoop:
@@ -26,36 +27,41 @@ def process(model, pipeline):
 				for line2 in lay.lines:
 					if line1 == line2:
 						continue
+
 					#for line2 in lay.lines:
 
 					a2 = ( line2.a().X, line2.a().Y )
 					b2 = ( line2.b().X, line2.b().Y )
 
-					a1 = ( round(a1[0], 4), round(a1[1], 4))
-					a2 = ( round(a2[0], 4), round(a2[1], 4))
+					#a1 = ( a1[0], a1[1])
+					#a2 = ( a2[0], a2[1])
 
-					b1 = ( round(b1[0], 4), round(b1[1], 4))
-					b2 = ( round(b2[0], 4), round(b2[1], 4))
+					#b1 = ( b1[0], b1[1])
+					#b2 = ( b2[0], b2[1])
 
 					#if a2x and b1y and b1x == a2x and b1y == a2y and \
 					#print a2x, b1y
 					#end meets beginning
-					if b1 == a2 :
-						try:
-							m1 = (a1[1] - b1[1]) / (a1[0] - b1[0])
-						except ZeroDivisionError:
-							m1 = None
-						try:
-							m2 = (a2[1] - b2[1]) / (a2[0] - b2[0])
-						except ZeroDivisionError:
-							m2 = None
+					#print a1[1], b1[1], a1[0], b1[0]
+					prec = 3
+					try:
+						m1 = int('%d'%abs(( round(a1[1],prec) - round(b1[1],prec)) / ( round(a1[0],prec) - round(b1[0],prec) )))
+					except ZeroDivisionError:
+						m1 = None
+					try:
+						m2 = int('%d'%abs((round(a2[1],prec) - round(b2[1],prec)) / (round(a2[0],prec) - round(b2[0],prec))))
+					except ZeroDivisionError:
+						m2 = None
 
+					#print m1, m2
+
+					if b1 == a2 :
 						if (m1 == m2):
 							#print " ", line1idx, b1x, a2x, b1y, a2y, m1, m2
 							lay.lines.remove(line2)
 							reducedLines = reducedLines+1
-							line1.points['B'].X = b2[0]
-							line1.points['B'].Y = b2[1]
+							line1.b().X = line2.b().X
+							line1.b().Y = line2.b().Y
 							b1 = (line1.b().X, line1.b().Y)
 							continue
 
@@ -65,19 +71,23 @@ def process(model, pipeline):
 		
 					#beginning meets end
 					if a1 == b2:
+						"""
 						try:
-							m1 = (a1[1] - b1[1]) / (a1[0] - b1[0])
+							m1 = float('%.1f'%abs((a1[1] - b1[1]) / (a1[0] - b1[0])))
 						except ZeroDivisionError:
 							m1 = None
 						try:
-							m2 = (a2[1] - b2[1]) / (a2[0] - b2[0])
+							m2 = float('%.1f'%abs((a2[1] - b2[1]) / (a2[0] - b2[0])))
 						except ZeroDivisionError:
 							m2 = None
+
+						print m1, m2
+						"""
 						if (m1 == m2):
 							lay.lines.remove(line2)
 							reducedLines = reducedLines+1
-							line1.points['A'].X = a2[0]
-							line1.points['A'].Y = a2[1]
+							line1.a().X = line2.a().X
+							line1.a().Y = line2.a().Y
 							a1 = (line1.a().X, line1.a().Y)
 							continue
 
@@ -87,19 +97,23 @@ def process(model, pipeline):
 
 					#beginning meets beginning
 					if a1 == a2:
+						"""
 						try:
-							m1 = (a1[1] - b1[1]) / (a1[0] - b1[0])
+							m1 = float('%.1f'%abs((a1[1] - b1[1]) / (a1[0] - b1[0])))
 						except ZeroDivisionError:
 							m1 = None
 						try:
-							m2 = (a2[1] - b2[1]) / (a2[0] - b2[0])
+							m2 = float('%.1f'%abs((a2[1] - b2[1]) / (a2[0] - b2[0])))
 						except ZeroDivisionError:
 							m2 = None
+
+						print m1, m2
+						"""
 						if (m1 == m2):
 							lay.lines.remove(line2)
 							reducedLines = reducedLines+1
-							line1.points['A'].X = b2[0]
-							line1.points['A'].Y = b2[1]
+							line1.a().X = b2[0]
+							line1.a().Y = b2[1]
 							a1 = (line1.a().X, line1.a().Y)
 							continue
 
@@ -109,19 +123,23 @@ def process(model, pipeline):
 
 					#end meets end
 					if b1 == b2:
+						"""
 						try:
-							m1 = (a1[1] - b1[1]) / (a1[0] - b1[0])
+							m1 = float('%.1f'%abs((a1[1] - b1[1]) / (a1[0] - b1[0])))
 						except ZeroDivisionError:
 							m1 = None
 						try:
-							m2 = (a2[1] - b2[1]) / (a2[0] - b2[0])
+							m2 = float('%.1f'%abs((a2[1] - b2[1]) / (a2[0] - b2[0])))
 						except ZeroDivisionError:
 							m2 = None
+
+						print m1, m2
+						"""
 						if (m1 == m2):
 							lay.lines.remove(line2)
 							reducedLines = reducedLines+1
-							line1.points['B'].X = a2[0]
-							line1.points['B'].Y = a2[1]
+							line1.b().X = a2[0]
+							line1.b().Y = a2[1]
 							b1 = (line1.b().X, line1.b().Y)
 							continue
 
