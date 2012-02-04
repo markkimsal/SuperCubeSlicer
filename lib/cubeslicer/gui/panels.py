@@ -1,31 +1,54 @@
 import wx
 import cubeslicer.gui.viz
+import cubeslicer.gui.events
+import cubeslicer.gui.dialogs
 import cubeslicer.workspace
 import cubeslicer.model
 import cubeslicer.slicer
+
+class PageWithText(wx.Panel):
+    def __init__(self, parent, title):
+        wx.Panel.__init__(self, parent)
+        t = wx.StaticText(self, -1, title, (60,60))
 
 class WorkspacePanel(wx.Panel):
 	def __init__(this, parent, id):
 		wx.Panel.__init__(this, parent, id, style= wx.SIMPLE_BORDER)
 		this.parent     = parent
 
+		this.Bind(cubeslicer.gui.events.CS_PROJ_CREATE_EVT, cubeslicer.workspace.new_project_event, id=10)
+
+		this.Bind(cubeslicer.gui.events.CS_PROJ_SELECT_EVT, this.OnProjectSelected, id=10)
+
 		tb = wx.ToolBar(this, style= (wx.TB_HORIZONTAL| wx.TB_TEXT | wx.TB_NOICONS))
 		#bmp = wx.Bitmap("media/icons/tango/Folder.png", wx.BITMAP_TYPE_PNG)
 		bmp = wx.ArtProvider.GetBitmap(wx.ART_FILE_OPEN)
 		tb.AddLabelTool(10, "New Project", bmp)
 		tb.AddLabelTool(20, "Import STL", bmp)
-		tb.AddLabelTool(30, "Import STL as new Project", bmp)
+		tb.EnableTool(20, False)
+		#tb.AddLabelTool(30, "Import STL as new Project", bmp)
+
+		#tb.AddLabelTool(20, "Open", open_bmp, shortHelp="Open", longHelp="Long help for 'Open'")
+		this.Bind(wx.EVT_TOOL, this.OnToolClick, id=10)
+		this.tb = tb
 
 		this.tree       = this._makeTree()
+
 		this._populateTree()
 
+		this.Bind(wx.EVT_TREE_SEL_CHANGED, this.OnSelect, this.tree)
+
 		#this.viz        = this.makeVisualizer(parent, id)
-		this.viz        = VizPanel(this, id)
+		#this.viz        = VizPanel(this, id)
+
+		this.settingsPage = PageWithText (this, "Placeholder")
 
 		this.upsizer    = wx.BoxSizer(wx.VERTICAL)
 		this.sizer      = wx.BoxSizer(wx.HORIZONTAL)
 		this.sizer.Add(this.tree, 0,  wx.EXPAND)
-		this.sizer.Add(this.viz,      1,  wx.EXPAND)
+		#this.sizer.Add(this.viz,      1,  wx.EXPAND)
+		#this.sizer.Detach(this.viz)
+		this.sizer.Add(this.settingsPage,      1,  wx.EXPAND)
 
 		this.upsizer.Add(tb, 0, wx.EXPAND)
 		this.upsizer.Add(this.sizer, 1, wx.EXPAND)
@@ -73,39 +96,103 @@ class WorkspacePanel(wx.Panel):
 		return tree
 
 	def _populateTree(this):
-		model = cubeslicer.workspace.WorkspaceModel()
-		proj  = model.projects()
-		itm = this.tree.AppendItem(this.root, "Hollow Pyramid")
-
 		isz = (36,36)
 		il = wx.ImageList(isz[0], isz[1])
 		fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
 		fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
 		fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, isz))
 
-		this.tree.SetItemImage(itm, fldridx, wx.TreeItemIcon_Normal)
-		this.tree.SetItemImage(itm, fldropenidx, wx.TreeItemIcon_Expanded)
+		model = cubeslicer.workspace.WorkspaceModel()
+		proj  = model.projects()
+		for _proj in proj:
+			itm = this.tree.AppendItem(this.root, _proj.name, image=-1, selectedImage=-1, data=wx.TreeItemData(_proj))
+			this.tree.SetItemImage(itm, fldridx, wx.TreeItemIcon_Normal)
+			this.tree.SetItemImage(itm, fldropenidx, wx.TreeItemIcon_Expanded)
+
+			itm2 = this.tree.AppendItem(itm, 'Hollow Pyramid', image=-1, selectedImage=-1, data=wx.TreeItemData( ('ut', 'data', 'hollow_pyramid.stl') ))
+			this.tree.SetItemImage(itm2, fileidx, wx.TreeItemIcon_Normal)
 
 	def OnActivate(this, event):
 		itm = event.GetItem()
-		df = ('ut', 'data', 'hollow_pyramid.stl')
-		#df = ('ut', 'data', 'cube.stl')
-		#model = cubeslicer.model.parse_stl('/'.join(df), 0.10)
 
-		#df = ('ut', 'data', 'cube.stl')
+		data = this.tree.GetItemData(itm)
+
+		if not data:
+			return
+
+		if isinstance(data.GetData(), cubeslicer.workspace.ProjectModel):
+			return
+
+		# assume we activated an stl file
+		df = data.GetData()
+
 		import os
 		pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
 		model = pipe.newModel()
 		pipe.appendPlugin('cubeslicer.plugins.parse_stl')
 		pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
+		pipe.appendPlugin('cubeslicer.plugins.find_polylines')
 		pipe.runPipeline()
 
 		this.viz.display.world.set_model(model)
 		this.viz.slider.SetMax( this.viz.display.world.get_max_z() )
 		this.viz.slider.SetMin( 1 )
-		this.viz.display.UpdateLayer(1);
+		this.viz.display.UpdateLayer( 1 );
+
+	def OnSelect(this, event):
+		itm = event.GetItem()
+		if itm == this.root:
+			this.tb.EnableTool(20, False)
+			return
+
+		if itm:
+			_proj = this.tree.GetItemData(itm)
+			if (not _proj):
+				this.tb.EnableTool(20, False)
+				print "not proj"
+				return
+
+			if isinstance(_proj.GetData(), cubeslicer.workspace.ProjectModel):
+				evt = wx.PyCommandEvent( cubeslicer.gui.events.CS_PROJ_SELECT, 10)
+				evt.SetString( _proj.GetData().project_id )
+				this.GetEventHandler().ProcessEvent(evt)
+				evt.Skip()
+
+			else:
+				#assume STL click
+				this.showViz()
+
+		event.Skip()
+
+	def showViz(this):
+		this.sizer.Remove(this.settingsPage)
+		this.viz        = VizPanel(this, -1)
+		this.sizer.Add(this.viz,      1,  wx.EXPAND)
+
+	def OnProjectSelected(this, event):
+		proj_id = event.GetString()
+
+		this.tb.EnableTool(20, True)
+		this.selectedProject = cubeslicer.workspace.WorkspaceModel.get_project(proj_id);
+		print this.selectedProject
+		print "Selected project: %s"%this.selectedProject.project_id
+		event.Skip()
 
 
+	def OnToolClick(this, event):
+		tb = event.GetEventObject()
+		toolid = event.GetId()
+		if (toolid == 10):
+			dlg = cubeslicer.gui.dialogs.NewProjectDialog(this, -1,  "New Project")
+			dlg.CenterOnScreen()
+			val = dlg.ShowModal()
+			if val == wx.ID_OK:
+				dlg.getName()
+				evt = wx.PyCommandEvent( cubeslicer.gui.events.CS_PROJ_CREATE, 10)
+				evt.SetString( dlg.getName() )
+				this.GetEventHandler().ProcessEvent(evt)
+				evt.Skip()
+				#cubeslicer.gui.events.ProjectNewEvent(dlg.getName())
 
 class VizPanel(wx.Panel):
 	def __init__(this, parent, id):
@@ -126,9 +213,9 @@ class VizPanel(wx.Panel):
 		this.Layout()
 
  
-	def OnScroll(self, event):
-		#self.display.linespacing = self.slider.GetValue()
-		self.display.size_dirty = False
-		self.display.UpdateLayer(self.slider.GetValue())
+	def OnScroll(this, event):
+		#this.display.linespacing = this.slider.GetValue()
+		this.display.size_dirty = False
+		this.display.UpdateLayer(this.slider.GetValue())
 
  

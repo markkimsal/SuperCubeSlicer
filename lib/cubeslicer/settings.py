@@ -5,7 +5,7 @@ def get_settings_dir():
 	home = os.getenv('USERPROFILE') or os.getenv('HOME')
 	settings_dir = os.path.join(  home, ".supercubeslicer" )
 
-	print settings_dir
+	#print settings_dir
 	if (not os.path.exists( settings_dir) ):
 		os.mkdir( settings_dir )
 	return settings_dir
@@ -25,21 +25,23 @@ class DbDriver(object):
 
 	def _conn(this):
 		this.conn = sqlite3.connect(this.dbfile)
+		this.conn.row_factory = sqlite3.Row
 
 	def _query(this, SQL):
 		if (not this.conn):
 			this._conn()
 		try:
+			print SQL
 			this.cur = this.conn.cursor()    
-			this.cur.execute('SELECT SQLITE_VERSION()')
-
-
+			x = this.cur.execute( SQL )
+			this.conn.commit()
 		except sqlite3.Error, e:
-			print "Error %s:" % e.args[0]
-			sys.exit(1)
+			print "Error: %s"%e.args[0]
+			raise Exception(e.args[0])
 
 	def next(this):
 		this.rec = this.cur.fetchone()
+		print this.rec
 		return this.rec
 
 	def _close(this):
