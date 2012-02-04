@@ -126,6 +126,9 @@ class WorkspacePanel(wx.Panel):
 		# assume we activated an stl file
 		df = data.GetData()
 
+		this.runViz(df)
+
+	def runViz(this, df):
 		import os
 		pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
 		model = pipe.newModel()
@@ -139,6 +142,7 @@ class WorkspacePanel(wx.Panel):
 		this.viz.slider.SetMin( 1 )
 		this.viz.display.UpdateLayer( 1 );
 
+
 	def OnSelect(this, event):
 		itm = event.GetItem()
 		if itm == this.root:
@@ -146,21 +150,22 @@ class WorkspacePanel(wx.Panel):
 			return
 
 		if itm:
-			_proj = this.tree.GetItemData(itm)
-			if (not _proj):
+			data = this.tree.GetItemData(itm)
+			if (not data):
 				this.tb.EnableTool(20, False)
 				print "not proj"
 				return
 
-			if isinstance(_proj.GetData(), cubeslicer.workspace.ProjectModel):
+			if isinstance(data.GetData(), cubeslicer.workspace.ProjectModel):
 				evt = wx.PyCommandEvent( cubeslicer.gui.events.CS_PROJ_SELECT, 10)
-				evt.SetString( _proj.GetData().project_id )
+				evt.SetString( data.GetData().project_id )
 				this.GetEventHandler().ProcessEvent(evt)
 				evt.Skip()
 
 			else:
 				#assume STL click
 				this.showViz()
+				this.runViz(data.GetData())
 
 		event.Skip()
 
@@ -168,6 +173,7 @@ class WorkspacePanel(wx.Panel):
 		this.sizer.Remove(this.settingsPage)
 		this.viz        = VizPanel(this, -1)
 		this.sizer.Add(this.viz,      1,  wx.EXPAND)
+		this.sizer.Layout()
 
 	def OnProjectSelected(this, event):
 		proj_id = event.GetString()
