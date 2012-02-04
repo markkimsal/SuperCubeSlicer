@@ -38,6 +38,7 @@ class WorkspacePanel(wx.Panel):
 
 		this.Bind(wx.EVT_TREE_SEL_CHANGED, this.OnSelect, this.tree)
 
+		this.viz         = None
 		#this.viz        = this.makeVisualizer(parent, id)
 		#this.viz        = VizPanel(this, id)
 
@@ -170,8 +171,9 @@ class WorkspacePanel(wx.Panel):
 		event.Skip()
 
 	def showViz(this):
-		this.sizer.Remove(this.settingsPage)
-		this.viz        = VizPanel(this, -1)
+		this.sizer.Remove(1)
+		if this.viz is None:
+			this.viz        = VizPanel(this, -1)
 		this.sizer.Add(this.viz,      1,  wx.EXPAND)
 		this.sizer.Layout()
 
