@@ -7,18 +7,24 @@ import cubeslicer.model
 import cubeslicer.slicer
 
 class PageWithText(wx.Panel):
-    def __init__(self, parent, title):
-        wx.Panel.__init__(self, parent)
-        t = wx.StaticText(self, -1, title, (60,60))
+    def __init__(this, parent, title):
+        wx.Panel.__init__(this, parent)
+        t = wx.StaticText(this, -1, title, (60,60))
 
 class WorkspacePanel(wx.Panel):
 	def __init__(this, parent, id):
 		wx.Panel.__init__(this, parent, id, style= wx.SIMPLE_BORDER)
 		this.parent     = parent
 
+		cubeslicer.gui.events.set_evt_handler(this.GetEventHandler())
+
 		this.Bind(cubeslicer.gui.events.CS_PROJ_CREATE_EVT, cubeslicer.workspace.new_project_event, id=10)
 
 		this.Bind(cubeslicer.gui.events.CS_PROJ_SELECT_EVT, this.OnProjectSelected, id=10)
+
+		this.Bind(cubeslicer.gui.events.CS_FILE_IMPORT_EVT, cubeslicer.workspace.import_file, id=10)
+
+		this.Bind(cubeslicer.gui.events.CS_PROJ_CHANGED_EVT, this._populateTree, id=10)
 
 		tb = wx.ToolBar(this, style= (wx.TB_HORIZONTAL| wx.TB_TEXT | wx.TB_NOICONS))
 		#bmp = wx.Bitmap("media/icons/tango/Folder.png", wx.BITMAP_TYPE_PNG)
@@ -30,6 +36,7 @@ class WorkspacePanel(wx.Panel):
 
 		#tb.AddLabelTool(20, "Open", open_bmp, shortHelp="Open", longHelp="Long help for 'Open'")
 		this.Bind(wx.EVT_TOOL, this.OnToolClick, id=10)
+		this.Bind(wx.EVT_TOOL, this.OnToolClick, id=20)
 		this.tb = tb
 
 		this.tree       = this._makeTree()
@@ -79,29 +86,26 @@ class WorkspacePanel(wx.Panel):
 		tID             = wx.NewId()
 		tree = wx.TreeCtrl(this, tID, wx.DefaultPosition, wx.DefaultSize, \
 				(wx.TR_DEFAULT_STYLE | wx.TR_HAS_BUTTONS) )
-		isz = (36,36)
-		il = wx.ImageList(isz[0], isz[1])
-		fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
-		fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
-		fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, isz))
-
-		tree.SetImageList(il)
-		this.il = il
 
 		this.Bind(wx.EVT_TREE_ITEM_ACTIVATED, this.OnActivate, tree)
 
-		this.root = tree.AddRoot("Workspace")
-		tree.SetPyData(this.root, None)
-		tree.SetItemImage(this.root, fldridx, wx.TreeItemIcon_Normal)
-		tree.SetItemImage(this.root, fldropenidx, wx.TreeItemIcon_Expanded)
 		return tree
 
-	def _populateTree(this):
+	def _populateTree(this, evt=None):
+		this.tree.DeleteAllItems()
 		isz = (36,36)
 		il = wx.ImageList(isz[0], isz[1])
 		fldridx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FOLDER,      wx.ART_OTHER, isz))
 		fldropenidx = il.Add(wx.ArtProvider_GetBitmap(wx.ART_FILE_OPEN,   wx.ART_OTHER, isz))
 		fileidx     = il.Add(wx.ArtProvider_GetBitmap(wx.ART_NORMAL_FILE, wx.ART_OTHER, isz))
+
+		this.root = this.tree.AddRoot("Workspace")
+		this.tree.SetPyData(this.root, None)
+		this.tree.SetItemImage(this.root, fldridx, wx.TreeItemIcon_Normal)
+		this.tree.SetItemImage(this.root, fldropenidx, wx.TreeItemIcon_Expanded)
+		this.tree.SetImageList(il)
+		this.il = il
+
 
 		model = cubeslicer.workspace.WorkspaceModel()
 		proj  = model.projects()
@@ -112,6 +116,8 @@ class WorkspacePanel(wx.Panel):
 
 			itm2 = this.tree.AppendItem(itm, 'Hollow Pyramid', image=-1, selectedImage=-1, data=wx.TreeItemData( ('ut', 'data', 'hollow_pyramid.stl') ))
 			this.tree.SetItemImage(itm2, fileidx, wx.TreeItemIcon_Normal)
+
+		this.tree.Expand(this.root)
 
 	def OnActivate(this, event):
 		itm = event.GetItem()
@@ -201,6 +207,26 @@ class WorkspacePanel(wx.Panel):
 				this.GetEventHandler().ProcessEvent(evt)
 				evt.Skip()
 				#cubeslicer.gui.events.ProjectNewEvent(dlg.getName())
+
+		if (toolid == 20):
+			import os
+			dlg = wx.FileDialog(
+				this, message="Choose a file",
+				defaultDir=os.getcwd(), 
+				defaultFile="",
+				style=wx.OPEN | wx.MULTIPLE | wx.CHANGE_DIR
+				)
+			dlg.CenterOnScreen()
+			val = dlg.ShowModal()
+			if val == wx.ID_OK:
+				paths = dlg.GetPaths()
+				evt = wx.PyCommandEvent( cubeslicer.gui.events.CS_FILE_IMPORT, 10)
+				evt.SetClientData( paths )
+				evt.SetString( this.selectedProject.project_id )
+				this.GetEventHandler().ProcessEvent(evt)
+				evt.Skip()
+				#cubeslicer.gui.events.ProjectNewEvent(dlg.getName())
+
 
 class VizPanel(wx.Panel):
 	def __init__(this, parent, id):
