@@ -114,13 +114,18 @@ class WorkspacePanel(wx.Panel):
 			this.tree.SetItemImage(itm, fldridx, wx.TreeItemIcon_Normal)
 			this.tree.SetItemImage(itm, fldropenidx, wx.TreeItemIcon_Expanded)
 
-			itm2 = this.tree.AppendItem(itm, 'Hollow Pyramid', image=-1, selectedImage=-1, data=wx.TreeItemData( ('ut', 'data', 'hollow_pyramid.stl') ))
-			this.tree.SetItemImage(itm2, fileidx, wx.TreeItemIcon_Normal)
+			fileList  = _proj.get_files()
+			for f in fileList:
+				itm2 = this.tree.AppendItem(itm, f.base_name, image=-1, selectedImage=-1, data=wx.TreeItemData( f.file_name ))
+				this.tree.SetItemImage(itm2, fileidx, wx.TreeItemIcon_Normal)
 
 		this.tree.Expand(this.root)
 
 	def OnActivate(this, event):
 		itm = event.GetItem()
+
+		if itm == this.root:
+			return
 
 		data = this.tree.GetItemData(itm)
 
@@ -137,11 +142,17 @@ class WorkspacePanel(wx.Panel):
 
 	def runViz(this, df):
 		import os
-		pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
+		if type(df) == 'tuple':
+			fullpath = os.sep.join(df)
+		else:
+			fullpath = df
+
+		print "going to slice ", fullpath
+		pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': fullpath})
 		model = pipe.newModel()
 		pipe.appendPlugin('cubeslicer.plugins.parse_stl')
-		pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
-		pipe.appendPlugin('cubeslicer.plugins.find_polylines')
+		#pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
+		#pipe.appendPlugin('cubeslicer.plugins.find_polylines')
 		pipe.runPipeline()
 
 		this.viz.display.world.set_model(model)

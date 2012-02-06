@@ -6,10 +6,37 @@ class ProjectModel(object):
 	def __init__(this, name, proj_id):
 		this.name = name
 		this.project_id = proj_id
+		this.fileList = []
 
 	@classmethod
 	def from_rec(this, rec):
 		return ProjectModel( rec['name'], rec['project_id'] )
+
+	def get_files(this):
+		try:
+			db = cubeslicer.settings.DbDriver()
+			db._query("SELECT * FROM file where project_id='%s'"%this.project_id)
+		except Exception:
+			cubeslicer.settings._db_init()
+			return this.fileList
+
+		while db.next():
+			this.fileList.append( FileModel.from_rec(db.rec) )
+
+		#this.dbfile = cubeslicer.settings.get_db_file()
+		return this.fileList
+
+
+class FileModel(object):
+	def __init__(this, file_name, base_name, proj_id):
+		this.file_name = file_name
+		this.base_name = base_name
+		this.project_id = proj_id
+		this.fileList = []
+
+	@classmethod
+	def from_rec(this, rec):
+		return FileModel( rec['file_name'], rec['base_name'], rec['project_id'] )
 
 
 class WorkspaceModel(object):
@@ -22,7 +49,7 @@ class WorkspaceModel(object):
 			db = cubeslicer.settings.DbDriver()
 			db._query("SELECT * FROM project")
 		except Exception:
-			this.create_table()
+			cubeslicer.settings._db_init()
 			return this.projList
 
 		while db.next():
@@ -47,15 +74,6 @@ class WorkspaceModel(object):
 
 	"""
 
-	def create_table(this):
-		db = cubeslicer.settings.DbDriver()
-		db._query('''create table project
-				(project_id text, name text, created_on int)''')
-
-		db._query('''create table file 
-				(project_id text, file_name text, created_on int)''')
-
-
 def new_project_event(event):
 	import uuid, time
 	proj_id = uuid.uuid1()
@@ -74,11 +92,13 @@ def fire_project_changed():
 	evt.Skip()
 
 def import_file(event):
-	import time
+	import time, os
 	proj_id   = event.GetString();
 	paths     = event.GetClientData()
 	name = paths[0]
+	base_name = os.path.basename(name)
+
 	db = cubeslicer.settings.DbDriver()
 	#print "insert into file (project_id, file_name, created_on) VALUES ('%s', '%s', %d)"%(proj_id, name, time.time())
-	db._query("insert into file (project_id, file_name, created_on) VALUES ('%s', '%s', %d)"%(proj_id, name, time.time()))
+	db._query("insert into file (project_id, file_name, base_name, created_on) VALUES ('%s', '%s', '%s', %d)"%(proj_id, name, base_name, time.time()))
 	fire_project_changed()
