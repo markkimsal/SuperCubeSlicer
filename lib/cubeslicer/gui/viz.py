@@ -3,6 +3,7 @@ from pygame.locals import *
 import cubeslicer.model
 import cubeslicer.geom
 import wx
+import logging
 
 class PygameDisplay(wx.Panel):
     """wx Window subclass that draws a pygame surface onto a wx Device Context"""
@@ -217,10 +218,10 @@ class Viz_World:
 
 	def layer_set(this, idx):
 		if (len(this.model.layers) <= idx and 0 > idx):
-			print "Layer is ", this.model.get_layer_z(this.viz_layer)
+			logging.info("Layer is: %.3f", this.model.get_layer_z(this.viz_layer))
 			return;
 		this.viz_layer = idx
-		print "Layer is ", this.model.get_layer_z(this.viz_layer)
+		logging.info("Layer is: %.3f", this.model.get_layer_z(this.viz_layer))
 		this.erasePlatform()
 		this.paint_model(this.platform.image, this.model)
 
@@ -238,7 +239,7 @@ class Viz_World:
 			layid = laykeys[this.viz_layer]
 		except IndexError:
 			return
-		print layid
+		#print layid
 		lay = model.layers[layid]
 		for line in lay.lines:
 			ax = int((line.a().X *this.zoom) + this.platform.size_x)
