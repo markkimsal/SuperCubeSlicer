@@ -195,6 +195,9 @@ class Viz_World:
 			w = w*this.zoom
 			pygame.draw.line(this.platform.image, this.grid_color, (0, w), (sx, w), 1)
 
+	def repaint(this):
+		this.erasePlatform()
+		this.paint_model(this.platform.image, this.model)
 
 	def layer_up(this):
 		this.viz_layer += 1

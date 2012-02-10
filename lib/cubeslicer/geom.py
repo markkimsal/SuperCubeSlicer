@@ -9,11 +9,11 @@ class Point:
 
 		this.X=a
 		this.Y=b
-		this.X=float('%.4f'%a)
-		this.Y=float('%.4f'%b)
+		this.X=float('%.5f'%a)
+		this.Y=float('%.5f'%b)
 		this.Z=c
 		if (c is not None):
-			this.Z = round(this.Z, 4)
+			this.Z = round(this.Z, 5)
 
 	def is_greater(this, point):
 		if (this.X >= point.X and this.Y > point.Y):

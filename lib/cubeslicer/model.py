@@ -6,6 +6,9 @@ class Model2d:
 		this.layers = dict()
 		this.layer_height = zh
 
+	def reset(this):
+		this.layers = dict()
+
 	def make_layer(this, lh):
 		if not this.layers.has_key(lh):
 			this.layers[lh] = Layer(lh)

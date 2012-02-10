@@ -151,7 +151,7 @@ class WorkspacePanel(wx.Panel):
 		pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': fullpath})
 		model = pipe.newModel()
 		pipe.appendPlugin('cubeslicer.plugins.parse_stl')
-		#pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
+		pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines', 'layer')
 		#pipe.appendPlugin('cubeslicer.plugins.find_polylines')
 		pipe.runPipeline()
 

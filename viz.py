@@ -36,7 +36,7 @@ if __name__ == '__main__':
 	pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': filename})
 	model = pipe.newModel()
 	pipe.appendPlugin('cubeslicer.plugins.parse_stl')
-	pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
+	pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines', 'layer')
 	#pipe.appendPlugin('cubeslicer.plugins.find_polylines')
 	pipe.runPipeline()
 
@@ -63,6 +63,11 @@ if __name__ == '__main__':
 
 		if (evt.type == KEYUP and (evt.key == K_UP or evt.key == K_DOWN)):
 			layer_accel=0
+
+		if (evt.type == KEYDOWN and evt.key == K_l):
+			logging.info( "layer step: %d", world.viz_layer )
+			pipe.stepLayer( world.viz_layer )
+			world.repaint()
 
 		if (layer_accel == -1):
 			world.layer_down()
