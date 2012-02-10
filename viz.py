@@ -25,9 +25,15 @@ if __name__ == '__main__':
 
 	pygame.display.set_caption('Super Cube Slice (Alpha)')
 	world = cubeslicer.gui.viz.Viz_World(8)
-	#df = ('ut', 'data', 'cube.stl')
-	df = ('ut', 'data', 'hollow_pyramid.stl')
-	pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': os.sep.join(df)})
+	print sys.argv[1]
+	if len(sys.argv) > 1:
+		filename = sys.argv[1]
+	else:
+		#df = ('ut', 'data', 'cube.stl')
+		df = ('ut', 'data', 'hollow_pyramid.stl')
+		filename = os.sep.join(df)
+
+	pipe = cubeslicer.slicer.Pipeline({'layerheight': 0.25, 'filename': filename})
 	model = pipe.newModel()
 	pipe.appendPlugin('cubeslicer.plugins.parse_stl')
 	pipe.appendPlugin('cubeslicer.plugins.combine_straight_lines')
